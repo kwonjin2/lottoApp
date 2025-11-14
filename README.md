@@ -1,50 +1,53 @@
-# Welcome to your Expo app 👋
+# **오픈 미션: 프리코스 챌린지**
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## **진행 방식**
 
-## Get started
+- 프리코스 경험 기반으로 관련된 분야의 미션을 설계하고 구현한다.
+- 미션 주제는 자유롭게 정한다.
+- 스스로 도전하고 싶은 목표를 설정하고, 그에 맞는 실행 계획을 세워 미션을 진행한다.
+- 2주 동안 자료 조사, 기획, 실행 후 결과물을 제출한다.
 
-1. Install dependencies
+## **미션 예시**
 
-   ```bash
-   npm install
-   ```
+- 낯선 도구 해커톤
+  - 설명: 난이도는 평범하나 평소에 잘 사용하지 않는 개발 도구나 언어(예: Rust, Kotlin, WebAssembly, 하드웨어 보드 등)로 문제를 해결한다.
+  - 과제: 반드시 동작하는 작은 결과물(예: 간단한 앱, CLI 툴, 시뮬레이션) 제출한다.
+- 고난도 문제 해커톤
+  - 설명: 평소에 익숙한 기술을 사용하여 난이도가 높은 문제를 해결한다.
+  - 과제: 난도가 높은, 정답이 없는 문제를 정의하고, 해결해 가는 과정, 결과물을 제출한다.
+- 제한 협업 미션
+  - 설명: 2~3명이 한 팀이 되어 처음 보는 사람과 협업한다.
+  - 과제: 제한 조건을 만들어서 진행한다.
+    - 예) “소통은 하루 15분 화상회의만 가능”, “코드 작성은 깃허브 이슈/PR로만”
 
-2. Start the app
+## **미션 제출 방법**
 
-   ```bash
-   npx expo start
-   ```
+- 추후 디스코드를 통해 안내 예정
 
-In the output, you'll find options to open the app in a
+<br>
+<br>
+<br>
+<br>
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+# react-native 로또
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 학습 목표
 
-## Get a fresh project
+- 한 번도 다뤄본 적 없는 프레임워크나 툴에 도전한다. (낯선 도구 해커톤)
+- 반드시 동작하는 작은 결과물을 제출한다.
+- 작은 목표를 이루었다면 계속해서 어려운 요구사항을 추가한다.
 
-When you're ready, run:
+## 기능 요구 사항
 
-```bash
-npm run reset-project
-```
+- 로또 번호를 생성한다.
+  - 로또 번호를 무작위로 생성한다.
+  - 로또 번호를 사용자의 입력 값에 따라 생성한다.
+    - 예시로 사용자의 생년월일 정보나, 오늘의 투두 달성 횟수, 운동한 시간, 디스코드 채널에 게시글 및 댓글 작성 개수, 오늘 개발하면서 화낸 횟수를 통해 로또 번호를 생성한다.
+  - 과거 로또 당첨 번호 기반으로 로또 번호를 생성한다.
+    - 이 부분은 아직 어떻게 구현할지 모르겠다. (시간이 남으면 구현 예정)
+- 로또 구매 인증을 통해 당첨되었을 시 사용자에게 알림을 보내준다.
+  - 이때 구매인증은 직접 구매한 로또 번호를 등록하거나 qr로 로또를 인식한 경우 구매했다고 판단하며, 추후 당첨번호가 결정되어 사용자가 구매한 로또가 당첨 시 알림을 보내준다.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 프로그래밍 요구사항
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- 구현한 기능에 대한 단위 테스트를 작성한다.
