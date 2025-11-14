@@ -1,4 +1,4 @@
-export const generateLottoNumbers = (): number[] => {
+const generateLottoNumbers = (): number[] => {
   const lottoNumbers = new Set<number>();
   const MAX_NUMBER = 45;
   const COUNT = 6;
@@ -13,3 +13,5 @@ export const generateLottoNumbers = (): number[] => {
 
   return sortedNumbers;
 };
+
+export default generateLottoNumbers;
