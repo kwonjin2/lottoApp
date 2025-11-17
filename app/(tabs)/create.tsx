@@ -1,17 +1,25 @@
 import { View, Text, StyleSheet, Button } from 'react-native';
 import { useState } from 'react';
-import generateLottoNumbers from '../../src/utils/generateLotto';
+import { useRouter } from 'expo-router';
+import generateLottoNumbers from '@/src/utils/generateLotto';
 import LottoBall from '@/src/components/LottoBall';
 
 export default function CreateLotto() {
   const [generatedNumbers, setGeneratedNumbers] = useState<number[]>([]);
+  const router = useRouter();
 
   const handleGenerate = () => {
     const newNumbers = generateLottoNumbers();
     setGeneratedNumbers(newNumbers);
   };
+
+  const goBack = () => {
+    router.back();
+  };
+
   return (
     <View style={styles.container}>
+      <Button title="뒤로 가기" onPress={goBack} />
       <Text style={styles.text}>로또 번호 만들기</Text>
       <Button title="생성하기" onPress={handleGenerate} />
       <View style={styles.lottos}>
@@ -27,13 +35,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#25292e',
-    alignItems: 'center',
-    paddingTop: 100,
+    paddingTop: 50,
     color: '#fff',
   },
   button: {
     flexDirection: 'row',
-    paddingTop: 30,
   },
   text: {
     color: '#fff',
@@ -42,8 +48,5 @@ const styles = StyleSheet.create({
   lottos: {
     flexDirection: 'row',
     gap: 10,
-  },
-  lotto: {
-    color: '#fff',
   },
 });
