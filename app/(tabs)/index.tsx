@@ -58,7 +58,6 @@ export default function CreateLotto() {
   const handleSimpleGenerate = () => {
     const newNumbers = generateLottoNumbers();
     setGeneratedNumbers(newNumbers);
-    setSpecialNumbers([]);
   };
 
   const handleSpecialGenerate = () => {
@@ -68,14 +67,30 @@ export default function CreateLotto() {
   const handleModalGenerate = (userInfo: SpecialUserInfo) => {
     const newSpecialNumbers = generateSpecialLotto(userInfo);
 
-    setGeneratedNumbers([]);
     setSpecialNumbers(newSpecialNumbers);
     setIsModalVisible(false);
   };
 
-  const handlePurchase = () => {
-    const numbersToPurchase =
-      specialNumbers.length > 0 ? specialNumbers : generatedNumbers;
+  const handlePurchase = (type: 'simple' | 'special') => {
+    let numbersToPurchase: number[];
+    let setNumbersToClear: React.Dispatch<React.SetStateAction<number[]>>;
+    let lottoName: string;
+
+    if (type === 'special') {
+      numbersToPurchase = specialNumbers;
+      setNumbersToClear = setSpecialNumbers;
+      lottoName = '특별 로또';
+    } else {
+      // 'simple'
+      numbersToPurchase = generatedNumbers;
+      setNumbersToClear = setGeneratedNumbers;
+      lottoName = '초간단 로또';
+    }
+
+    if (numbersToPurchase.length === 0) {
+      alert(`먼저 ${lottoName} 번호를 생성해주세요.`);
+      return;
+    }
 
     const newEntry: LottoEntry = {
       id: Date.now(),
@@ -92,8 +107,7 @@ export default function CreateLotto() {
     alert('해당 로또 번호를 구매했습니다.\n 기록 페이지에서 확인해 보세요.');
     setPurchaseHistory((prev) => [...prev, newEntry]);
 
-    setGeneratedNumbers([]);
-    setSpecialNumbers([]);
+    setNumbersToClear([]);
   };
 
   return (
@@ -104,7 +118,7 @@ export default function CreateLotto() {
         description={['클릭 한 번으로 랜덤 번호를', '즉시 생성해드려요']}
         generatedNumbers={generatedNumbers}
         onGenerate={handleSimpleGenerate}
-        purchaseLotto={handlePurchase}
+        purchaseLotto={() => handlePurchase('simple')}
         buttonTitle="번호 생성하기"
         buttonColor="#FFD700"
         buttonTextColor="#25292e"
@@ -118,7 +132,7 @@ export default function CreateLotto() {
         ]}
         generatedNumbers={specialNumbers}
         onGenerate={handleSpecialGenerate}
-        purchaseLotto={handlePurchase}
+        purchaseLotto={() => handlePurchase('special')}
         buttonTitle="특별 생성하기"
         buttonColor="#8BC34A"
         buttonTextColor="#fff"
