@@ -12,6 +12,15 @@ interface LottoEntry {
   date: string;
 }
 
+interface SpecialUserInfo {
+  name: string;
+  date: string;
+  smileCount: number;
+  immersionCount: number;
+  woowahanActivity: number;
+  myScore: number;
+}
+
 const STORAGE_KEY = '@lotto_purchase_history';
 
 export default function CreateLotto() {
@@ -56,7 +65,7 @@ export default function CreateLotto() {
     setIsModalVisible(true);
   };
 
-  const handleModalGenerate = (userInfo: { name: string; date: string }) => {
+  const handleModalGenerate = (userInfo: SpecialUserInfo) => {
     const newSpecialNumbers = generateSpecialLotto(userInfo);
 
     setGeneratedNumbers([]);
