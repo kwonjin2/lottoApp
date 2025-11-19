@@ -42,7 +42,7 @@ export default function LottoModal({
 
         <TextInput
           style={modalStyles.input}
-          placeholder="생년월일 (YYYYMMDD)"
+          placeholder="생년월일 (YYYY.MM.DD)"
           placeholderTextColor="#999"
           value={birthDate}
           onChangeText={setBirthDate}
