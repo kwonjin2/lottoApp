@@ -13,30 +13,13 @@ export default function TabsLayout() {
         <TouchableOpacity onPress={() => router.push('/')}>
           <View style={styles.tabItem}>
             <MaterialCommunityIcons
-              name="home-outline"
-              size={28}
-              color={pathname === '/' ? '#FFD700' : '#fff'}
-            />
-            <Text
-              style={[styles.tabText, pathname === '/' && styles.activeTab]}
-            >
-              Home
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/create')}>
-          <View style={styles.tabItem}>
-            <MaterialCommunityIcons
               name="crystal-ball"
               size={24}
-              color={pathname === '/create' ? '#FFD700' : '#fff'}
+              color={pathname === '/' ? '#FFD700' : '#fff'}
             />
 
             <Text
-              style={[
-                styles.tabText,
-                pathname === '/create' && styles.activeTab,
-              ]}
+              style={[styles.tabText, pathname === '/' && styles.activeTab]}
             >
               Lotto
             </Text>
@@ -69,7 +52,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 10,
-    // backgroundColor: '#25292e',
     borderTopWidth: 1,
     borderTopColor: '#444',
   },
