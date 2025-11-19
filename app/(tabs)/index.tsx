@@ -1,149 +1,136 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState, useEffect } from 'react';
+import generateLottoNumbers from '@/src/utils/generateLotto';
+import LottoCard from '@/src/components/LottoCard';
+import LottoModal from '@/src/components/LottoModal';
 
-export default function HomePage() {
+interface LottoEntry {
+  id: number;
+  numbers: number[];
+  date: string;
+}
+
+const STORAGE_KEY = '@lotto_purchase_history';
+
+export default function CreateLotto() {
+  const [generatedNumbers, setGeneratedNumbers] = useState<number[]>([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [purchaseHistory, setPurchaseHistory] = useState<LottoEntry[]>([]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+        if (jsonValue !== null) {
+          setPurchaseHistory(JSON.parse(jsonValue));
+        }
+      } catch (e) {
+        console.error('Failed to load purchase history:', e);
+      }
+    };
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
+    const saveHistory = async () => {
+      try {
+        const jsonValue = JSON.stringify(purchaseHistory);
+        await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+      } catch (e) {
+        console.error('Failed to save purchase history:', e);
+      }
+    };
+    saveHistory();
+  }, [purchaseHistory]);
+
+  const handleSimpleGenerate = () => {
+    const newNumbers = generateLottoNumbers();
+    setGeneratedNumbers(newNumbers);
+  };
+
+  const handleSpecialGenerate = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleModalGenerate = (userInfo: { name: string; date: string }) => {
+    console.log('특별 로또 생성 정보:', userInfo);
+    const specialNumbers = generateLottoNumbers();
+    setGeneratedNumbers(specialNumbers);
+    setIsModalVisible(false);
+  };
+
+  const handlePurchase = () => {
+    const newEntry: LottoEntry = {
+      id: Date.now(),
+      numbers: [...generatedNumbers],
+      date: new Date().toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    };
+
+    alert('해당 로또 번호를 구매했습니다.\n 기록 페이지에서 확인해 보세요.');
+    setPurchaseHistory((prev) => [...prev, newEntry]);
+    setGeneratedNumbers([]);
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.circularLayout}>
-        <Text style={styles.titleText}>놋또</Text>
-        <View
-          style={[styles.lotto, styles.ball1, { backgroundColor: '#FF6B6B' }]}
-        >
-          <Text style={styles.lottoNumber}>26</Text>
-        </View>
-        <View
-          style={[styles.lotto, styles.ball2, { backgroundColor: '#4CAF50' }]}
-        >
-          <Text style={styles.lottoNumber}>33</Text>
-        </View>
-        <View
-          style={[styles.lotto, styles.ball3, { backgroundColor: '#FFD700' }]}
-        >
-          <Text style={styles.lottoNumber}>39</Text>
-        </View>
-        <View
-          style={[styles.lotto, styles.ball4, { backgroundColor: '#2196F3' }]}
-        >
-          <Text style={styles.lottoNumber}>41</Text>
-        </View>
-        <View
-          style={[styles.lotto, styles.ball5, { backgroundColor: '#9C27B0' }]}
-        >
-          <Text style={styles.lottoNumber}>38</Text>
-        </View>
-        <View
-          style={[styles.lotto, styles.ball6, { backgroundColor: '#FF5722' }]}
-        >
-          <Text style={styles.lottoNumber}>30</Text>
-        </View>
-      </View>
-
-      <View>
-        <Text>대시보드</Text>
-        <View style={{ flexDirection: 'row', gap: 20 }}>
-          {/* <Text>대시보드</Text> */}
-          <View
-            style={{
-              backgroundColor: '#34383D',
-              width: 160,
-              height: 100,
-              borderRadius: 20,
-            }}
-          >
-            <Text>당첨률</Text>
-            <Text>0%</Text>
-            <Text>0 / 0 당첨</Text>
-          </View>
-          <View
-            style={{
-              backgroundColor: '#34383D',
-              width: 160,
-              height: 100,
-              borderRadius: 20,
-            }}
-          >
-            <Text>구매횟수</Text>
-            <Text>0회</Text>
-            <Text>총 0원 투자</Text>
-          </View>
-          <View></View>
-        </View>
-      </View>
+      <Text style={styles.header}>LUCKY COMPASS</Text>
+      <LottoCard
+        header="⚡️초간단 로또"
+        description={['클릭 한 번으로 랜덤 번호를', '즉시 생성해드려요']}
+        generatedNumbers={generatedNumbers}
+        onGenerate={handleSimpleGenerate}
+        purchaseLotto={handlePurchase}
+        buttonTitle="번호 생성하기"
+        buttonColor="#FFD700"
+        buttonTextColor="#25292e"
+      />
+      <LottoCard
+        header="✨ 특별 로또"
+        description={[
+          '나만의 특별한 숫자를 기반으로',
+          '맞춤형 로또를 생성해보세요',
+        ]}
+        generatedNumbers={[]}
+        onGenerate={handleSpecialGenerate}
+        purchaseLotto={handlePurchase}
+        buttonTitle="특별 생성하기"
+        buttonColor="#8BC34A"
+        buttonTextColor="#fff"
+      />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <LottoModal
+          onClose={() => setIsModalVisible(false)}
+          onGenerate={handleModalGenerate}
+        />
+      </Modal>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#25292e',
+    paddingTop: 50,
+    gap: 28,
     alignItems: 'center',
-    paddingTop: 40,
+    marginTop: 21,
   },
-  circularLayout: {
-    width: 250,
-    height: 250,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    marginBottom: 40,
-  },
-  lotto: {
-    width: 45,
-    height: 45,
-    borderRadius: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lottoNumber: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  titleText: {
-    color: '#FFD700',
-    fontWeight: 'bold',
+  header: {
     fontSize: 30,
-    zIndex: 1,
-  },
-  ball1: {
-    backgroundColor: '#FF6B6B',
-    position: 'absolute',
-    top: 0,
-    left: '50%',
-    transform: [{ translateX: -22.5 }, { translateY: 22.5 }],
-  },
-  ball2: {
-    backgroundColor: '#4CAF50',
-    position: 'absolute',
-    top: 40,
-    right: 0,
-    transform: [{ translateX: -30 }, { translateY: 25 }],
-  },
-  ball3: {
-    backgroundColor: '#bca10bff',
-    position: 'absolute',
-    bottom: 40,
-    right: 0,
-    transform: [{ translateX: -30 }, { translateY: -25 }],
-  },
-  ball4: {
-    backgroundColor: '#2196F3',
-    position: 'absolute',
-    bottom: 0,
-    left: '50%',
-    transform: [{ translateX: -22.5 }, { translateY: -25 }],
-  },
-  ball5: {
-    backgroundColor: '#9C27B0',
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    transform: [{ translateX: 30 }, { translateY: -25 }],
-  },
-  ball6: {
-    backgroundColor: '#FF5722',
-    position: 'absolute',
-    top: 40,
-    left: 0,
-    transform: [{ translateX: 30 }, { translateY: 25 }],
+    fontWeight: 'bold',
+    color: '#FFD700',
   },
 });
