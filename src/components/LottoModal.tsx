@@ -4,12 +4,24 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  ScrollView,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import React, { useState } from 'react';
 
+interface SpecialUserInfo {
+  name: string;
+  date: string;
+  smileCount: number;
+  immersionCount: number;
+  woowahanActivity: number;
+  myScore: number;
+}
+
 interface SpecialLottoModalProps {
   onClose: () => void;
-  onGenerate: (userInfo: { name: string; date: string }) => void;
+  onGenerate: (userInfo: SpecialUserInfo) => void;
 }
 
 export default function LottoModal({
@@ -18,37 +30,110 @@ export default function LottoModal({
 }: SpecialLottoModalProps) {
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [smileCount, setSmileCount] = useState('');
+  const [immersionCount, setImmersionCount] = useState('');
+  const [woowahanActivity, setWoowahanActivity] = useState('');
+  const [myScore, setMyScore] = useState('');
 
   const handleGeneratePress = () => {
-    onGenerate({ name, date: birthDate });
+    if (!name || !birthDate) {
+      alert('이름과 생년월일을 입력해주세요.');
+      return;
+    }
+
+    const parsedSmileCount = parseInt(smileCount) || 0;
+    const parsedImmersionCount = parseInt(immersionCount) || 0;
+    const parsedWoowahanActivity = parseInt(woowahanActivity) || 0;
+    const parsedMyScore = parseInt(myScore) || 1;
+
+    onGenerate({
+      name,
+      date: birthDate,
+      // 숫자 입력값의 범위를 강제로 조정하여 로직 오류를 방지합니다.
+      smileCount: Math.min(Math.max(0, parsedSmileCount), 10),
+      immersionCount: Math.min(Math.max(0, parsedImmersionCount), 10),
+      woowahanActivity: Math.min(Math.max(0, parsedWoowahanActivity), 20),
+      myScore: Math.min(Math.max(1, parsedMyScore), 45),
+    });
+
     onClose();
   };
 
   return (
-    <View style={modalStyles.centeredView}>
+    <KeyboardAvoidingView
+      style={modalStyles.centeredView}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      enabled
+    >
       <View style={modalStyles.modalView}>
-        <Text style={modalStyles.modalTitle}>특별 로또 정보 입력</Text>
-        <Text style={modalStyles.modalText}>
-          운명을 기반으로 번호를 생성합니다.
-        </Text>
+        <ScrollView
+          style={{ width: '100%' }}
+          contentContainerStyle={{ alignItems: 'center' }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={modalStyles.modalTitle}>✨ 특별 로또 정보 입력</Text>
+          <Text style={modalStyles.modalText}>
+            이름, 생년월일과 오늘의 활동 지표를 기반으로 번호를 생성합니다.
+          </Text>
 
-        <TextInput
-          style={modalStyles.input}
-          placeholder="이름"
-          placeholderTextColor="#999"
-          value={name}
-          onChangeText={setName}
-        />
+          <TextInput
+            style={modalStyles.input}
+            placeholder="이름"
+            placeholderTextColor="#999"
+            value={name}
+            onChangeText={setName}
+          />
+          <TextInput
+            style={modalStyles.input}
+            placeholder="생년월일 (YYYYMMDD)"
+            placeholderTextColor="#999"
+            value={birthDate}
+            onChangeText={setBirthDate}
+            keyboardType="numeric"
+            maxLength={8}
+          />
 
-        <TextInput
-          style={modalStyles.input}
-          placeholder="생년월일 (YYYY.MM.DD)"
-          placeholderTextColor="#999"
-          value={birthDate}
-          onChangeText={setBirthDate}
-          keyboardType="numeric"
-          maxLength={8}
-        />
+          <Text style={modalStyles.sectionTitle}>
+            오늘의 활동 지표 (숫자만 입력)
+          </Text>
+
+          <TextInput
+            style={modalStyles.input}
+            placeholder="오늘 웃은 횟수 (0 ~ 10)"
+            placeholderTextColor="#999"
+            value={smileCount}
+            onChangeText={setSmileCount}
+            keyboardType="numeric"
+            maxLength={2}
+          />
+          <TextInput
+            style={modalStyles.input}
+            placeholder="오늘 몰입한 횟수 (0 ~ 10)"
+            placeholderTextColor="#999"
+            value={immersionCount}
+            onChangeText={setImmersionCount}
+            keyboardType="numeric"
+            maxLength={2}
+          />
+          <TextInput
+            style={modalStyles.input}
+            placeholder="디코 (게시글+댓글 횟수, 0 ~ 20)"
+            placeholderTextColor="#999"
+            value={woowahanActivity}
+            onChangeText={setWoowahanActivity}
+            keyboardType="numeric"
+            maxLength={2}
+          />
+          <TextInput
+            style={modalStyles.input}
+            placeholder="오늘 땡기는 숫자 (1 ~ 45)"
+            placeholderTextColor="#999"
+            value={myScore}
+            onChangeText={setMyScore}
+            keyboardType="numeric"
+            maxLength={2}
+          />
+        </ScrollView>
 
         <View style={modalStyles.buttonContainer}>
           <TouchableOpacity
@@ -66,7 +151,7 @@ export default function LottoModal({
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -75,11 +160,12 @@ const modalStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // 반투명 검정 배경
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   modalView: {
     width: '85%',
-    backgroundColor: '#34383D', // 앱의 카드 배경색과 유사
+    maxHeight: '80%',
+    backgroundColor: '#34383D',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -90,16 +176,25 @@ const modalStyles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: {
-    marginBottom: 15,
+    marginBottom: 10,
     textAlign: 'center',
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFD700', // 금색
+    color: '#FFD700',
   },
   modalText: {
     marginBottom: 20,
     textAlign: 'center',
     color: '#B0B0B0',
+    fontSize: 14,
+  },
+  sectionTitle: {
+    marginTop: 5,
+    marginBottom: 10,
+    color: '#FFD700',
+    fontWeight: 'bold',
+    fontSize: 16,
+    alignSelf: 'flex-start',
   },
   input: {
     width: '100%',
@@ -112,7 +207,7 @@ const modalStyles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 15,
     justifyContent: 'space-between',
     width: '100%',
   },
@@ -124,10 +219,10 @@ const modalStyles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonGenerate: {
-    backgroundColor: '#8BC34A', // 특별 로또 버튼 색상
+    backgroundColor: '#8BC34A',
   },
   buttonClose: {
-    backgroundColor: '#555', // 취소 버튼은 어둡게
+    backgroundColor: '#555',
   },
   textStyle: {
     color: 'white',
