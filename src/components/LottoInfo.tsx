@@ -1,41 +1,41 @@
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import LottoBall from './LottoBall';
-import useLottoData from '@/src/hooks/useLottoData';
 
-export default function LottoInfo() {
-  const { lottoData, isLoading, error } = useLottoData();
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>데이터를 불러오는 중...</Text>
-      </View>
-    );
-  }
+interface LottoInfoProps {
+  drwNo: number;
+  drwNoDate: string;
+  drwtNo1: number;
+  drwtNo2: number;
+  drwtNo3: number;
+  drwtNo4: number;
+  drwtNo5: number;
+  drwtNo6: number;
+  bnusNo: number;
+}
 
-  if (error) {
-    return <p>오류 발생: {error}</p>;
-  }
-
-  if (!lottoData) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>데이터 로드에 실패했습니다.</Text>
-      </View>
-    );
-  }
+export default function LottoInfo({
+  drwNo,
+  drwNoDate,
+  drwtNo1,
+  drwtNo2,
+  drwtNo3,
+  drwtNo4,
+  drwtNo5,
+  drwtNo6,
+  bnusNo,
+}: LottoInfoProps) {
   return (
     <View style={{ flex: 0.34, marginBottom: 10 }}>
-      <Text style={styles.header}>🏆 로또 {lottoData.drwNo}회 당첨 정보</Text>
+      <Text style={styles.header}>🏆 로또 {drwNo}회 당첨 정보</Text>
       <View style={styles.historyItem}>
-        <Text style={styles.historyDate}>추첨일: {lottoData.drwNoDate}</Text>
+        <Text style={styles.historyDate}>추첨일: {drwNoDate}</Text>
         <View style={{ flexDirection: 'row', position: 'relative', left: -12 }}>
-          <LottoBall number={lottoData.drwtNo1} />
-          <LottoBall number={lottoData.drwtNo2} />
-          <LottoBall number={lottoData.drwtNo3} />
-          <LottoBall number={lottoData.drwtNo4} />
-          <LottoBall number={lottoData.drwtNo5} />
-          <LottoBall number={lottoData.drwtNo6} />
+          <LottoBall number={drwtNo1} />
+          <LottoBall number={drwtNo2} />
+          <LottoBall number={drwtNo3} />
+          <LottoBall number={drwtNo4} />
+          <LottoBall number={drwtNo5} />
+          <LottoBall number={drwtNo6} />
           <Text
             style={{
               fontSize: 20,
@@ -47,7 +47,7 @@ export default function LottoInfo() {
           >
             +
           </Text>
-          <LottoBall number={lottoData.bnusNo} />
+          <LottoBall number={bnusNo} />
         </View>
       </View>
     </View>

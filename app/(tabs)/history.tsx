@@ -3,17 +3,20 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottoBall from '@/src/components/LottoBall';
 import LottoInfo from '@/src/components/LottoInfo';
+import useLottoData from '@/src/hooks/useLottoData';
 
 interface LottoEntry {
   id: number;
   numbers: number[];
   date: string;
+  drwNo: number;
 }
 
 const STORAGE_KEY = '@lotto_purchase_history';
 
 export default function HistoryPage() {
   const [historyData, setHistoryData] = useState<LottoEntry[]>([]);
+  const { lottoData, isLoading, error } = useLottoData();
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -29,9 +32,27 @@ export default function HistoryPage() {
     loadHistory();
   }, []);
 
+  if (isLoading) {
+    return <Text>로딩중...</Text>;
+  }
+
+  if (error || !lottoData) {
+    return <Text>데이터를 불러올 수 없습니다.</Text>;
+  }
+
   return (
     <View style={styles.container}>
-      <LottoInfo />
+      <LottoInfo
+        drwNo={lottoData.drwNo}
+        drwNoDate={lottoData.drwNoDate}
+        drwtNo1={lottoData.drwtNo1}
+        drwtNo2={lottoData.drwtNo2}
+        drwtNo3={lottoData.drwtNo3}
+        drwtNo4={lottoData.drwtNo4}
+        drwtNo5={lottoData.drwtNo5}
+        drwtNo6={lottoData.drwtNo6}
+        bnusNo={lottoData.bnusNo}
+      />
       <Text style={styles.header}>구매 기록</Text>
       <ScrollView
         contentContainerStyle={styles.scrollViewContent}
