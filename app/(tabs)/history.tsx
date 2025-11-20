@@ -2,6 +2,7 @@ import { View, ScrollView, Text, StyleSheet } from 'react-native';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottoBall from '@/src/components/LottoBall';
+import LottoInfo from '@/src/components/LottoInfo';
 
 interface LottoEntry {
   id: number;
@@ -9,15 +10,17 @@ interface LottoEntry {
   date: string;
 }
 
+const STORAGE_KEY = '@lotto_purchase_history';
+
 export default function HistoryPage() {
-  const [data, setData] = useState<LottoEntry[]>([]);
+  const [historyData, setHistoryData] = useState<LottoEntry[]>([]);
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const jsonValue = await AsyncStorage.getItem('@lotto_purchase_history');
+        const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
         if (jsonValue !== null) {
-          setData(JSON.parse(jsonValue));
+          setHistoryData(JSON.parse(jsonValue));
         }
       } catch (e) {
         console.error('Failed to load', e);
@@ -28,10 +31,13 @@ export default function HistoryPage() {
 
   return (
     <View style={styles.container}>
+      <LottoInfo />
       <Text style={styles.header}>구매 기록</Text>
-
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {data
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        style={styles.fullWidthScroll}
+      >
+        {historyData
           .slice()
           .reverse()
           .map((entry) => (
@@ -68,8 +74,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#25292e',
-    alignItems: 'center',
     paddingTop: 50,
+    paddingHorizontal: 20,
   },
   header: {
     color: '#FFD700',
@@ -77,21 +83,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 20,
+    alignSelf: 'flex-start',
+  },
+  fullWidthScroll: {
+    flex: 1,
+    width: '100%',
   },
   scrollViewContent: {
-    width: 360,
+    width: '100%',
     paddingBottom: 20,
+    alignItems: 'center',
   },
   historyItem: {
     backgroundColor: '#34383D',
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
+    width: '100%',
+    maxWidth: 400,
     justifyContent: 'center',
     alignItems: 'flex-start',
   },
   lottoBallContainer: {
-    flexDirection: 'row', // 가로 배열
+    flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
@@ -104,11 +118,5 @@ const styles = StyleSheet.create({
     color: '#B0B0B0',
     fontSize: 12,
     marginBottom: 5,
-  },
-  historyNumbers: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-    letterSpacing: 2,
   },
 });
