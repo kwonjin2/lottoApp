@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   numberText: {
-    color: '#000',
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },

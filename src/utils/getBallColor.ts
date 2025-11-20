@@ -1,14 +1,14 @@
 const getBallColor = (number: number): string => {
   if (number <= 10) {
-    return '#FBC400';
+    return '#f2b720';
   } else if (number <= 20) {
-    return '#69C8F2';
+    return '#4072ac';
   } else if (number <= 30) {
-    return '#FF7272';
+    return '#de4c0e';
   } else if (number <= 40) {
-    return '#AAAAAA';
+    return '#9195a4';
   } else {
-    return '#B0D840';
+    return '#13be4b';
   }
 };
 
