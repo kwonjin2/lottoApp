@@ -3,7 +3,7 @@ import LottoBall from './LottoBall';
 import useLottoData from '@/src/hooks/useLottoData';
 
 export default function LottoInfo() {
-  const { lottoData, isLoading, error } = useLottoData(1198);
+  const { lottoData, isLoading, error } = useLottoData();
   if (isLoading) {
     return (
       <View style={styles.container}>
