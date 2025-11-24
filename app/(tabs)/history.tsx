@@ -33,12 +33,22 @@ export default function HistoryPage() {
   }, []);
 
   if (isLoading) {
-    return <Text>로딩중...</Text>;
+    return <Text style={{ flex: 1 }}>로딩중...</Text>;
   }
 
   if (error || !lottoData) {
-    return <Text>데이터를 불러올 수 없습니다.</Text>;
+    return <Text style={{ flex: 1 }}>데이터를 불러올 수 없습니다.</Text>;
   }
+
+  const currentWinNums: WinningNumbers = {
+    drwtNo1: lottoData.drwtNo1,
+    drwtNo2: lottoData.drwtNo2,
+    drwtNo3: lottoData.drwtNo3,
+    drwtNo4: lottoData.drwtNo4,
+    drwtNo5: lottoData.drwtNo5,
+    drwtNo6: lottoData.drwtNo6,
+    bnusNo: lottoData.bnusNo,
+  };
 
   return (
     <View style={styles.container}>
@@ -61,31 +71,65 @@ export default function HistoryPage() {
         {historyData
           .slice()
           .reverse()
-          .map((entry) => (
-            <View key={entry.id} style={styles.historyItem}>
-              <Text style={styles.historyDate}>{entry.date}</Text>
-              <View style={styles.lotto}>
-                <View style={styles.lottoBallContainer}>
-                  {entry.numbers.map((num, idx) => (
-                    <LottoBall key={`${entry.id}-${idx}`} number={num} />
-                  ))}
-                </View>
-                <View
-                  style={{
-                    width: 30,
-                    height: 20,
-                    backgroundColor: '#fff',
-                    marginLeft: 15,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 6,
-                  }}
-                >
-                  <Text>대기</Text>
+          .map((entry) => {
+            let statusText = '대기';
+            let statusColor = '#fff';
+            let statusBgColor = '#34383D';
+
+            if (entry.drwNo < lottoData.drwNo) {
+              const rank = calculateRank(entry.numbers, currentWinNums);
+              statusText = rank;
+
+              if (rank === '낙첨') {
+                statusColor = '#FF6347';
+              } else if (rank === '대기') {
+                statusColor = '#fff';
+              } else {
+                statusColor = '#32CD32';
+                statusBgColor = '#34383D';
+              }
+            } else if (entry.drwNo === lottoData.drwNo) {
+              const rank = calculateRank(entry.numbers, currentWinNums);
+              statusText = rank;
+
+              if (rank === '낙첨') {
+                statusColor = '#FF6347';
+              } else {
+                statusColor = '#32CD32';
+              }
+            } else {
+              statusText = '대기';
+              statusColor = '#B0B0B0';
+            }
+
+            return (
+              <View key={entry.id} style={styles.historyItem}>
+                <Text style={styles.historyDate}>
+                  {entry.date} ({entry.drwNo}회)
+                </Text>
+                <View style={styles.lotto}>
+                  <View style={styles.lottoBallContainer}>
+                    {entry.numbers.map((num, idx) => (
+                      <LottoBall key={`${entry.id}-${idx}`} number={num} />
+                    ))}
+                  </View>
+                  <View
+                    style={[
+                      styles.statusBox,
+                      {
+                        backgroundColor: statusBgColor,
+                        borderColor: statusColor,
+                      },
+                    ]}
+                  >
+                    <Text style={{ color: statusColor, fontWeight: 'bold' }}>
+                      {statusText}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
       </ScrollView>
     </View>
   );
@@ -140,4 +184,60 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 5,
   },
+  statusBox: {
+    width: 45,
+    height: 20,
+    marginLeft: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+    borderWidth: 1,
+  },
 });
+
+interface WinningNumbers {
+  drwtNo1: number;
+  drwtNo2: number;
+  drwtNo3: number;
+  drwtNo4: number;
+  drwtNo5: number;
+  drwtNo6: number;
+  bnusNo: number;
+}
+
+const calculateRank = (
+  purchasedNumbers: number[],
+  winningNumbers: WinningNumbers
+): string => {
+  const winNums = [
+    winningNumbers.drwtNo1,
+    winningNumbers.drwtNo2,
+    winningNumbers.drwtNo3,
+    winningNumbers.drwtNo4,
+    winningNumbers.drwtNo5,
+    winningNumbers.drwtNo6,
+  ];
+  const bonusNum = winningNumbers.bnusNo;
+
+  let matchCount = 0;
+  for (const num of purchasedNumbers) {
+    if (winNums.includes(num)) {
+      matchCount++;
+    }
+  }
+
+  const hasBonus = purchasedNumbers.includes(bonusNum);
+
+  switch (matchCount) {
+    case 6:
+      return '1등';
+    case 5:
+      return hasBonus ? '2등' : '3등';
+    case 4:
+      return '4등';
+    case 3:
+      return '5등';
+    default:
+      return '낙첨';
+  }
+};
