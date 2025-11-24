@@ -1,6 +1,8 @@
 import { View, Text, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
+import useLottoData from '@/src/hooks/useLottoData';
+
 import generateLottoNumbers from '@/src/utils/generateLotto';
 import generateSpecialLotto from '@/src/utils/generateSpecialLotto';
 import LottoCard from '@/src/components/LottoCard';
@@ -10,6 +12,7 @@ interface LottoEntry {
   id: number;
   numbers: number[];
   date: string;
+  drwNo: number;
 }
 
 interface SpecialUserInfo {
@@ -28,6 +31,7 @@ export default function CreateLotto() {
   const [specialNumbers, setSpecialNumbers] = useState<number[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [purchaseHistory, setPurchaseHistory] = useState<LottoEntry[]>([]);
+  const { latestLottoData, isLoading: isLottoDataLoading } = useLottoData([]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -72,6 +76,11 @@ export default function CreateLotto() {
   };
 
   const handlePurchase = (type: 'simple' | 'special') => {
+    if (isLottoDataLoading || !latestLottoData) {
+      alert('로또 회차 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
     let numbersToPurchase: number[];
     let setNumbersToClear: React.Dispatch<React.SetStateAction<number[]>>;
     let lottoName: string;
@@ -81,7 +90,6 @@ export default function CreateLotto() {
       setNumbersToClear = setSpecialNumbers;
       lottoName = '특별 로또';
     } else {
-      // 'simple'
       numbersToPurchase = generatedNumbers;
       setNumbersToClear = setGeneratedNumbers;
       lottoName = '초간단 로또';
@@ -91,6 +99,8 @@ export default function CreateLotto() {
       alert(`먼저 ${lottoName} 번호를 생성해주세요.`);
       return;
     }
+
+    const nextDrawNo = latestLottoData.drwNo + 1;
 
     const newEntry: LottoEntry = {
       id: Date.now(),
@@ -102,13 +112,26 @@ export default function CreateLotto() {
         hour: '2-digit',
         minute: '2-digit',
       }),
+      drwNo: nextDrawNo,
     };
 
-    alert('해당 로또 번호를 구매했습니다.\n 기록 페이지에서 확인해 보세요.');
+    alert(
+      `해당 로또를 구매했습니다. (${nextDrawNo}회) 기록 페이지에서 확인해 보세요.`
+    );
     setPurchaseHistory((prev) => [...prev, newEntry]);
 
     setNumbersToClear([]);
   };
+
+  if (isLottoDataLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={{ color: '#fff', fontSize: 18 }}>
+          로또 회차 정보 로딩 중...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

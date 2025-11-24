@@ -1,32 +1,42 @@
 import { useEffect, useState } from 'react';
-import { LottoDataType, fetchLottoData } from '../utils/fetchLottoData';
+import {
+  LottoDataType,
+  fetchLottoData,
+  findLatestDrawNo,
+} from '../utils/fetchLottoData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LAST_DRAW_NO_KEY = '@LastLottoDrawNo';
 const INITIAL_BASE_DRAW_NO = 1198;
 
-interface LottoHookResult {
-  lottoData: LottoDataType | null;
+// 1. 반환 인터페이스
+interface AllLottoHookResult {
+  allLottoData: Record<number, LottoDataType>;
+  latestLottoData: LottoDataType | null;
   isLoading: boolean;
   error: any;
 }
 
-const useLottoData = (): LottoHookResult => {
-  const [lottoData, setLottoData] = useState<LottoDataType | null>(null);
+// 2. 훅의 인수를 추가 (HistoryPage에서 전달할 requiredDrawNos)
+const useLottoData = (requiredDrawNos: number[]): AllLottoHookResult => {
+  const [allLottoData, setAllLottoData] = useState<
+    Record<number, LottoDataType>
+  >({});
+  const [latestDrawNo, setLatestDrawNo] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
-    const loadDataWithLoop = async () => {
+    const loadAllData = async () => {
       setIsLoading(true);
       setError(null);
 
-      // 1. AsyncStorage에서 기본 회차 번호를 가져옵니다.
-      let currentDrawNo = INITIAL_BASE_DRAW_NO;
+      // 1. AsyncStorage에서 마지막 성공 회차 번호를 가져오거나 기본값 설정
+      let baseDrawNo = INITIAL_BASE_DRAW_NO;
       try {
         const storedValue = await AsyncStorage.getItem(LAST_DRAW_NO_KEY);
         if (storedValue) {
-          currentDrawNo = parseInt(storedValue, 10);
+          baseDrawNo = parseInt(storedValue, 10);
         }
       } catch (e) {
         console.warn(
@@ -35,68 +45,70 @@ const useLottoData = (): LottoHookResult => {
         );
       }
 
-      let lastSuccessfulData: LottoDataType | null = null;
-      let lastSuccessfulDrawNo: number = currentDrawNo;
+      // 2. 최신 회차 번호를 찾습니다.
+      const currentLatestDrawNo = await findLatestDrawNo(baseDrawNo);
 
-      // 2. [핵심 로직] 마지막 성공 회차에서 +1 한 회차부터 시작
-      let nextDrawNoToTry = currentDrawNo + 1;
-      let shouldContinue = true;
-
-      // 먼저 기준 회차의 데이터를 가져와서 lastSuccessfulData를 초기화합니다.
-      // (AsyncStorage 값이 유효하지 않을 가능성에 대비)
-      lastSuccessfulData = await fetchLottoData(currentDrawNo);
-
-      // 만약 기준 회차마저 실패한다면, 에러 처리 후 종료
-      if (!lastSuccessfulData) {
-        setError(
-          `시작 회차(${currentDrawNo}회) 데이터 로드 실패. API 문제일 수 있습니다.`
-        );
+      if (!currentLatestDrawNo) {
+        setError('최신 로또 회차 번호를 찾을 수 없습니다.');
         setIsLoading(false);
         return;
       }
 
-      // 3. 다음 회차 요청이 실패할 때까지 무한 루프 시도
-      while (shouldContinue) {
-        const nextResult = await fetchLottoData(nextDrawNoToTry);
+      // 3. 필요한 모든 회차 번호 목록 생성 (구매 기록 + 최신 회차)
+      // requiredDrawNos가 비어 있어도 currentLatestDrawNo는 포함됨
+      const uniqueDrawNos = Array.from(
+        new Set([
+          ...requiredDrawNos, // HistoryPage에서 전달받은 구매 기록 회차
+          currentLatestDrawNo, // 현재 가장 최신 당첨 회차
+        ])
+      );
 
-        if (nextResult) {
-          // 4. 요청 성공: 이 회차가 최신 성공 회차임.
-          lastSuccessfulData = nextResult;
-          lastSuccessfulDrawNo = nextDrawNoToTry;
-          nextDrawNoToTry++; // 다음 회차를 시도하기 위해 번호 증가
-        } else {
-          // 5. 요청 실패: 추첨이 아직 안 되었거나 (예: 1199회) API 오류
-          shouldContinue = false; // 루프 종료
+      // 4. 모든 회차 데이터 병렬 요청
+      const dataPromises = uniqueDrawNos.map((drwNo) => fetchLottoData(drwNo));
+      const results = await Promise.all(dataPromises);
+
+      const newAllData: Record<number, LottoDataType> = {};
+
+      results.forEach((data) => {
+        if (data) {
+          newAllData[data.drwNo] = data;
         }
-      }
+      });
 
-      // 6. 상태 업데이트 및 AsyncStorage 저장
-      if (lastSuccessfulData) {
-        setLottoData(lastSuccessfulData);
+      // 5. 상태 업데이트
+      setAllLottoData(newAllData);
+      setLatestDrawNo(currentLatestDrawNo);
 
-        try {
-          // 마지막으로 성공한 회차 번호를 저장 (다음번 시작점으로 사용)
-          await AsyncStorage.setItem(
-            LAST_DRAW_NO_KEY,
-            lastSuccessfulDrawNo.toString()
-          );
-        } catch (e) {
-          console.error('AsyncStorage 업데이트 실패:', e);
-        }
-      } else {
-        // 이미 위에서 초기화 실패를 처리했지만 혹시 모를 경우
-        setError(
-          `최신 로또 회차(${lastSuccessfulDrawNo}회) 데이터를 가져오는 데 실패했습니다.`
+      // 6. AsyncStorage 업데이트
+      try {
+        await AsyncStorage.setItem(
+          LAST_DRAW_NO_KEY,
+          currentLatestDrawNo.toString()
         );
+      } catch (e) {
+        console.error('AsyncStorage 업데이트 실패:', e);
       }
 
       setIsLoading(false);
     };
 
-    loadDataWithLoop();
-  }, []);
+    // 🎯 수정된 핵심: requiredDrawNos의 길이에 관계없이 무조건 loadAllData()를 호출합니다.
+    loadAllData();
 
-  return { lottoData, isLoading, error };
+    // Note: 이전에 있던 'else' 블록 (requiredDrawNos.length > 0)은 제거되었습니다.
+  }, [requiredDrawNos]);
+
+  // 최종 반환 객체 구성
+  const latestLottoData = latestDrawNo
+    ? allLottoData[latestDrawNo] || null
+    : null;
+
+  return {
+    allLottoData,
+    latestLottoData,
+    isLoading,
+    error,
+  };
 };
 
 export default useLottoData;
