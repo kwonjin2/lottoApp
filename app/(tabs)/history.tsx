@@ -1,12 +1,9 @@
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
-import { useState, useEffect, useMemo } from 'react'; // useMemo 추가
+import { useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LottoBall from '@/src/components/LottoBall';
 import LottoInfo from '@/src/components/LottoInfo';
 import useLottoData from '@/src/hooks/useLottoData';
-
-// LottoDataType 인터페이스는 fetchLottoData.ts에서 가져와야 하지만,
-// 여기서는 필요한 WinningNumbers와 LottoEntry만 정의합니다.
 
 interface LottoEntry {
   id: number;
@@ -25,20 +22,16 @@ interface WinningNumbers {
   bnusNo: number;
 }
 
-// -------------------------------------------------------------
-
 const STORAGE_KEY = '@lotto_purchase_history';
 
 export default function HistoryPage() {
   const [historyData, setHistoryData] = useState<LottoEntry[]>([]);
 
-  // 1. 구매 기록에서 필요한 모든 회차 번호 추출
   const requiredDrawNos = useMemo(() => {
     const drawNos = historyData.map((entry) => entry.drwNo);
     return Array.from(new Set(drawNos));
   }, [historyData]);
 
-  // 2. 수정된 훅 호출 (requiredDrawNos 전달 및 반환 구조 변경)
   const { allLottoData, latestLottoData, isLoading, error } =
     useLottoData(requiredDrawNos);
 
@@ -48,7 +41,6 @@ export default function HistoryPage() {
         const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
         if (jsonValue !== null) {
           setHistoryData(JSON.parse(jsonValue));
-          console.log('구매 기록:', JSON.parse(jsonValue));
         }
       } catch (e) {
         console.error('Failed to load history:', e);
@@ -61,7 +53,6 @@ export default function HistoryPage() {
     return <Text style={{ flex: 1 }}>로딩중...</Text>;
   }
 
-  // latestLottoData는 LottoInfo 렌더링에 사용되므로 확인
   if (error || !latestLottoData) {
     return (
       <Text style={{ flex: 1 }}>
@@ -92,15 +83,13 @@ export default function HistoryPage() {
           .slice()
           .reverse()
           .map((entry) => {
-            // 해당 구매 기록의 회차에 맞는 당첨 데이터를 Map에서 찾음
             const targetWinData = allLottoData[entry.drwNo];
 
             let statusText = '대기';
-            let statusColor = '#B0B0B0'; // 기본 대기 색상
+            let statusColor = '#B0B0B0';
             let statusBgColor = '#34383D';
 
             if (targetWinData) {
-              // 3. 해당 회차의 당첨 번호가 존재함 (발표 완료된 회차)
               const winNums: WinningNumbers = {
                 drwtNo1: targetWinData.drwtNo1,
                 drwtNo2: targetWinData.drwtNo2,
@@ -115,12 +104,11 @@ export default function HistoryPage() {
               statusText = rank;
 
               if (rank === '낙첨') {
-                statusColor = '#FF6347'; // 낙첨 (붉은색)
+                statusColor = '#FF6347';
               } else {
-                statusColor = '#32CD32'; // 당첨 (초록색)
+                statusColor = '#32CD32';
               }
             } else {
-              // 4. 해당 회차의 당첨 번호가 존재하지 않음 (미래 회차)
               statusText = '대기';
               statusColor = '#B0B0B0';
             }
@@ -157,9 +145,6 @@ export default function HistoryPage() {
     </View>
   );
 }
-
-// -------------------------------------------------------------
-// 스타일은 기존과 동일
 
 const styles = StyleSheet.create({
   container: {
@@ -220,9 +205,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
 });
-
-// -------------------------------------------------------------
-// calculateRank 함수는 기존과 동일하게 유지
 
 const calculateRank = (
   purchasedNumbers: number[],
